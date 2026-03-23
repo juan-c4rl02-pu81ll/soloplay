@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SoloPlay Python</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        h1, h2, h3, .title-font { font-family: 'Space Grotesk', sans-serif; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 24px; }
+        .btn-neon { background: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); color: white; transition: all 0.2s; }
+        .btn-neon:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 antialiased">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="w-full max-w-sm glass-card p-8 flex flex-col items-center gap-6">
+        <span class="material-icons-outlined text-6xl text-blue-400">lock</span>
+        <h1 class="text-2xl font-bold title-font text-center">Protocolo de Acceso</h1>
+        <p class="text-slate-400 text-sm text-center">Ingresa tu PIN de administrador maestro</p>
+        <input type="password" id="pin-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-center text-xl tracking-widest text-white focus:outline-none focus:border-blue-500 transition-colors" placeholder="****">
+        <button onclick="login()" class="w-full btn-neon font-bold title-font py-4 rounded-xl text-lg tracking-wide uppercase">Desbloquear Sistema</button>
+        <p id="login-error" class="text-red-400 text-sm hidden">Autenticación fallida.</p>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="main-dashboard" class="w-full max-w-md hidden flex-col h-[90vh]">
+        <!-- Header -->
+        <header class="flex justify-between items-center bg-slate-800/50 p-4 rounded-2xl mb-6 shadow-lg border border-slate-700/50">
+            <div>
+                <p class="text-xs text-slate-400 uppercase tracking-widest font-bold">Nivel Actual</p>
+                <div class="flex items-center gap-2">
+                    <span class="material-icons-outlined text-emerald-400">military_tech</span>
+                    <span id="ui-level" class="text-2xl title-font font-bold text-emerald-400">Lvl. 1</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-xs text-slate-400 uppercase tracking-widest font-bold">Experiencia</p>
+                <span id="ui-points" class="text-xl title-font font-bold text-blue-400">0 pts</span>
+            </div>
+        </header>
+
+        <!-- Launcher -->
+        <main class="flex-1 flex flex-col justify-center gap-6">
+            <div class="glass-card p-6">
+                <h2 class="title-font font-bold text-xl mb-4 text-center">Siguiente Desafío</h2>
+                <label class="block text-xs uppercase text-slate-400 mb-2 mt-4">Forzar Temática (Opcional)</label>
+                <input type="text" id="topic-input" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors mb-6" placeholder="Ej: Condicionales en IoT">
+                
+                <button onclick="requestChallenge()" id="btn-challenge" class="w-full btn-neon font-bold title-font py-5 rounded-2xl text-xl tracking-wide uppercase flex items-center justify-center gap-3">
+                    <span class="material-icons-outlined">bolt</span>
+                    Generar Reto
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- QUIZ MODAL -->
+    <div id="quiz-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md hidden flex flex-col p-4 sm:p-6 pb-20 z-50 overflow-y-auto">
+        <div class="w-full max-w-lg mx-auto flex-1 flex flex-col gap-4">
+            <button onclick="closeQuiz()" class="self-start text-slate-400 hover:text-white p-2">
+                <span class="material-icons-outlined">arrow_back</span>
+            </button>
+            
+            <div class="glass-card p-6 border-blue-500/30">
+                <p class="text-[10px] text-blue-400 uppercase tracking-widest mb-2 font-bold flex items-center gap-2">
+                    <span class="material-icons-outlined text-[14px]">psychology</span> Análisis de Problema
+                </p>
+                <p id="q-context" class="text-slate-300 text-sm mb-4 leading-relaxed"></p>
+                <h3 id="q-question" class="text-lg font-bold title-font text-white mb-4"></h3>
+                
+                <div class="bg-black/60 border border-slate-800 p-4 rounded-xl mb-6 overflow-x-auto">
+                    <pre id="q-code" class="text-emerald-300 font-mono text-xs"></pre>
+                </div>
+
+                <div id="q-options" class="grid grid-cols-1 gap-3">
+                    <!-- Botones inyectados con javascript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK OVERLAY -->
+    <div id="feedback-overlay" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[100] p-6">
+        <div class="text-center glass-card p-8 max-w-sm w-full">
+            <span id="feedback-icon" class="material-icons-outlined text-6xl mb-4"></span>
+            <h2 id="feedback-title" class="text-3xl font-bold title-font mb-2"></h2>
+            <p id="feedback-desc" class="text-slate-400 text-sm mb-8"></p>
+            <button onclick="closeFeedback()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest transition-all">Continuar</button>
+        </div>
+    </div>
+
+    <script>
+        const API = "/api/game";
+        let userPin = localStorage.getItem("soloplay_pin");
+        let currentChallenge = null;
+
+        // Auto-login si hay token guardado
+        if (userPin) {
+            document.getElementById("login-screen").classList.add("hidden");
+            document.getElementById("main-dashboard").classList.remove("hidden");
+            document.getElementById("main-dashboard").classList.add("flex");
+            fetchStats();
+        }
+
+        async function apiCall(action, body = null) {
+            const url = `${API}?action=${action}`;
+            const req = {
+                method: body ? "POST" : "GET",
+                headers: { "Authorization": `Bearer ${userPin}`, "Content-Type": "application/json" }
+            };
+            if (body) req.body = JSON.stringify(body);
+
+            const res = await fetch(url, req);
+            if (res.status === 401) {
+                localStorage.removeItem("soloplay_pin");
+                location.reload();
+            }
+            if (!res.ok) throw new Error("API Error");
+            return await res.json();
+        }
+
+        async function login() {
+            const pin = document.getElementById("pin-input").value;
+            try {
+                const res = await fetch(`${API}?action=stats`, { headers: { "Authorization": `Bearer ${pin}` }});
+                if (res.ok) {
+                    userPin = pin;
+                    localStorage.setItem("soloplay_pin", pin);
+                    document.getElementById("login-screen").classList.add("hidden");
+                    document.getElementById("main-dashboard").classList.remove("hidden");
+                    document.getElementById("main-dashboard").classList.add("flex");
+                    fetchStats();
+                } else {
+                    document.getElementById("login-error").classList.remove("hidden");
+                }
+            } catch (e) {
+                document.getElementById("login-error").classList.remove("hidden");
+            }
+        }
+
+        async function fetchStats() {
+            try {
+                const data = await apiCall("stats");
+                document.getElementById("ui-level").innerText = `Lvl. ${data.level}`;
+                document.getElementById("ui-points").innerText = `${data.points} pts`;
+            } catch (e) { console.error(e); }
+        }
+
+        async function requestChallenge() {
+            const btn = document.getElementById("btn-challenge");
+            const oldText = btn.innerHTML;
+            btn.innerHTML = `<span class="material-icons-outlined animate-spin">autorenew</span> Conectando IA...`;
+            btn.disabled = true;
+
+            try {
+                const topic = document.getElementById("topic-input").value;
+                currentChallenge = await apiCall("challenge", { topic });
+                
+                document.getElementById("q-context").innerText = currentChallenge.contexto;
+                document.getElementById("q-question").innerText = currentChallenge.pregunta;
+                document.getElementById("q-code").innerText = currentChallenge.codigo;
+                
+                const optsGrid = document.getElementById("q-options");
+                optsGrid.innerHTML = "";
+                currentChallenge.opciones.forEach(opt => {
+                    const button = document.createElement("button");
+                    button.className = "w-full text-left bg-slate-800/80 hover:bg-blue-600/30 border border-slate-700 py-3 px-4 rounded-xl text-sm transition-all";
+                    button.innerText = opt;
+                    button.onclick = () => submitAnswer(opt);
+                    optsGrid.appendChild(button);
+                });
+
+                document.getElementById("quiz-modal").classList.remove("hidden");
+            } catch (e) {
+                alert("Error generando reto.");
+            }
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+        }
+
+        async function submitAnswer(selected) {
+            const isCorrect = selected === currentChallenge.correcta;
+            const topic = document.getElementById("topic-input").value || "General";
+            
+            // Call API para sumar puntos o fallo en Blobs
+            await apiCall("submit", { isCorrect, topic });
+
+            const overlay = document.getElementById("feedback-overlay");
+            const icon = document.getElementById("feedback-icon");
+            const title = document.getElementById("feedback-title");
+            const desc = document.getElementById("feedback-desc");
+
+            overlay.classList.remove("hidden");
+            overlay.classList.add("flex");
+
+            if (isCorrect) {
+                icon.innerText = "check_circle"; icon.className = "material-icons-outlined text-6xl mb-4 text-emerald-400";
+                title.innerText = "¡Misión Cumplida!"; title.className = "text-3xl font-bold title-font mb-2 text-emerald-400";
+            } else {
+                icon.innerText = "error"; icon.className = "material-icons-outlined text-6xl mb-4 text-red-500";
+                title.innerText = "Error Crítico"; title.className = "text-3xl font-bold title-font mb-2 text-red-500";
+            }
+            desc.innerText = `La respuesta era: ${currentChallenge.correcta}. \n\nExplicación: ${currentChallenge.explicacion}`;
+            
+            fetchStats();
+        }
+
+        function closeFeedback() {
+            document.getElementById("feedback-overlay").classList.add("hidden");
+            document.getElementById("feedback-overlay").classList.remove("flex");
+            closeQuiz();
+        }
+
+        function closeQuiz() {
+            document.getElementById("quiz-modal").classList.add("hidden");
+            document.getElementById("topic-input").value = "";
+        }
+    </script>
+</body>
+</html>
