@@ -3,115 +3,96 @@ import { getStore } from "@netlify/blobs";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async (req: Request, context: Context) => {
-    // 1. SIMPLE AUTHENTICATION
+    // Auth simple
     const authHeader = req.headers.get("Authorization");
-    const adminPin = process.env.APP_PIN; // Configure on Netlify dashboard
-    
-    if (!adminPin) {
-        return new Response(JSON.stringify({ error: "Server Configuration Error: Missing PIN" }), { status: 500 });
-    }
-    
-    if (authHeader !== `Bearer ${adminPin}`) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const adminPin = process.env.APP_PIN;
+    if (!adminPin) return new Response(JSON.stringify({ error: "Config missing" }), { status: 500 });
+    if (authHeader !== `Bearer ${adminPin}`) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
 
-    // CORS Headers
-    const headers = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-    };
-
-    // If preflight
-    if (req.method === "OPTIONS") {
-        return new Response("ok", { headers });
-    }
+    const headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
+    if (req.method === "OPTIONS") return new Response("ok", { headers });
 
     try {
         const url = new URL(req.url);
         const action = url.searchParams.get("action");
         const blobStore = getStore("player_stats");
 
-        // Initialization of store if empty
         let points = parseInt(await blobStore.get("points") || "0");
         let level = parseInt(await blobStore.get("level") || "1");
-        let failedTopics = await blobStore.get("failed_topics") || "";
+        let failed = await blobStore.get("failed_topics") || "Ninguno";
 
         if (action === "stats") {
-            return new Response(JSON.stringify({ points, level, failedTopics }), { headers, status: 200 });
+            return new Response(JSON.stringify({ points, level, failedTopics: failed }), { headers });
         }
 
         if (action === "challenge") {
             const body = await req.json();
-            const preferredTopic = body.topic || "Conceptos avanzados";
+            const topic = body.topic || "Conceptos avanzados";
 
-            // Get professor code from Github directly via api
-            const githubRes = await fetch("https://api.github.com/repos/aguscarrera77/Python-datos/contents");
-            let githubCode = "No fresh code available";
-            if (githubRes.ok) {
-                const files = await githubRes.json();
-                const pyFiles = files.filter((f: any) => f.name.endsWith('.py') || f.name.endsWith('.ipynb'));
-                if (pyFiles.length > 0) {
-                    const lastFileUrl = pyFiles[pyFiles.length - 1].download_url;
-                    const codeRes = await fetch(lastFileUrl);
-                    githubCode = await codeRes.text();
+            // SCRAPER DE GITHUB (Filtrar solo .py para evitar errores 500)
+            let githubCode = "Nivel básico de Python";
+            try {
+                const githubRes = await fetch("https://api.github.com/repos/aguscarrera77/Python-datos/contents");
+                if (githubRes.ok) {
+                    const files = await githubRes.json();
+                    const pyFiles = files.filter((f: any) => f.name.endsWith('.py')); 
+                    if (pyFiles.length > 0) {
+                        const codeRes = await fetch(pyFiles[pyFiles.length - 1].download_url);
+                        githubCode = await codeRes.text();
+                    }
                 }
+            } catch (e) {
+                console.log("Github unreachable");
             }
 
-            const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-            const model = genai.getGenerativeModel({ model: "gemini-2.5-flash-preview-09-2025" });
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
 
             const prompt = `
-            Eres mi simulador educativo personal para Python.
-            Soy Nivel ${level}. He fallado previamente en: ${failedTopics}.
-            El tema de estudio que he solicitado es: ${preferredTopic}.
+            Genera un reto personal de Python en formato JSON.
+            Alumno Nivel: ${level}. Fallos previos: ${failed}.
+            Tema solicitado: ${topic}.
             
-            Usa la siguiente base del github del profesor como inspiración para sintaxis y nivel:
-            ${githubCode.substring(0, 1000)}
+            Contexto técnico del profesor:
+            ${githubCode.substring(0, 1500)}
 
-            Genera un problema real de hardware o software que yo deba resolver.
-            Usa el siguiente formato JSON estricto sin markdown tags:
+            Responde ÚNICAMENTE con el objeto JSON puro sin bloques de código markdown:
             {
                 "contexto": "Escenario",
-                "pregunta": "Pregunta",
-                "codigo": "Código con '___' si es completar",
+                "pregunta": "¿Qué resolver?",
+                "codigo": "Código con '___' si aplica",
                 "opciones": ["A", "B", "C", "D"],
-                "correcta": "La respuesta exacta",
-                "explicacion": "El porqué de la respuesta"
+                "correcta": "La opción exacta",
+                "explicacion": "Análisis rápido"
             }
             `;
 
-            const aiResponse = await model.generateContent(prompt);
-            const textResponse = aiResponse.response.text();
-            const cleanJson = textResponse.replace(/^```json/g, '').replace(/```$/g, '').trim();
-
-            return new Response(cleanJson, { headers, status: 200 });
+            const aiResult = await model.generateContent(prompt);
+            const responseText = aiResult.response.text();
+            const cleanJsonText = responseText.replace(/```json|```/g, "").trim();
+            
+            return new Response(cleanJsonText, { headers });
         }
 
         if (action === "submit") {
             const body = await req.json();
-            const isCorrect = body.isCorrect;
-            const topic = body.topic;
-
-            if (isCorrect) {
+            if (body.isCorrect) {
                 points += 100 * level;
                 level = Math.floor(points / 500) + 1;
                 await blobStore.set("points", points.toString());
                 await blobStore.set("level", level.toString());
             } else {
-                failedTopics += `${topic}, `;
-                await blobStore.set("failed_topics", failedTopics.substring(0, 50));
+                const newFailed = (failed + ", " + body.topic).substring(0, 100);
+                await blobStore.set("failed_topics", newFailed);
             }
-
-            return new Response(JSON.stringify({ success: true, points, level }), { headers, status: 200 });
+            return new Response(JSON.stringify({ success: true, points, level }), { headers });
         }
 
-        return new Response(JSON.stringify({ error: "Unknown Action" }), { status: 400 });
+        return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400 });
 
-    } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    } catch (e: any) {
+        return new Response(JSON.stringify({ error: e.message }), { status: 500, headers });
     }
 };
 
-export const config: Config = {
-    path: "/api/game"
-};
+export const config: Config = { path: "/api/game" };
