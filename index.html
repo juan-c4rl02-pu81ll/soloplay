@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SoloPlay - Aprende Programando</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+  :root {
+    --purple: #a855f7;
+    --purple-dark: #7c3aed;
+    --cyan: #22d3ee;
+    --cyan-dark: #0891b2;
+    --bg-dark: #0a0a1a;
+    --bg-card: #12122a;
+    --bg-card-light: #1a1a3e;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    --glow-purple: 0 0 20px rgba(168, 85, 247, 0.4);
+    --glow-cyan: 0 0 20px rgba(34, 211, 238, 0.4);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: 
+      radial-gradient(ellipse at 20% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(34, 211, 238, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .grid-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: 
+      linear-gradient(rgba(168, 85, 247, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168, 85, 247, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app-container {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 0;
+  }
+
+  .screen {
+    display: none;
+    min-height: 100vh;
+    min-height: 100dvh;
+    flex-direction: column;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .screen.active {
+    display: flex;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes rotateGlow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes successPop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  .onboarding-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 20px;
+    overflow-y: auto;
+  }
+
+  .onboarding-logo {
+    width: 100px;
+    height: 100px;
+    margin: 30px auto 20px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(var(--glow-purple));
+  }
+
+  .onboarding-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    text-align: center;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+
+  .onboarding-subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+
+  .step-indicator {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .step-dot {
+    width: 32px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bg-card-light);
+    transition: all 0.3s ease;
+  }
+
+  .step-dot.active {
+    background: var(--purple);
+    box-shadow: var(--glow-purple);
+    width: 48px;
+  }
+
+  .step-dot.done {
+    background: var(--cyan);
+  }
+
+  .onboarding-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(168, 85, 247, 0.15);
+    border-radius: 20px;
+    padding: 24px 20px;
+    animation: slideUp 0.5s ease;
+  }
+
+  .onboarding-step-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--cyan);
+  }
+
+  .onboarding-step-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .input-group {
+    margin-bottom: 16px;
+  }
+
+  .input-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-dark);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .input-field:focus {
+    border-color: var(--purple);
+    box-shadow: var(--glow-purple);
+  }
+
+  .input-field::placeholder {
+    color: rgba(148, 163, 184, 0.5);
+  }
+
+  .input-hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .input-hint a {
+    color: var(--cyan);
+    text-decoration: none;
+    word-break: break-all;
+  }
+
+  .input-hint a:hover {
+    text-decoration: underline;
+  }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+    color: white;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 6px 25px rgba(168, 85, 247, 0.5);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: var(--bg-card-light);
+    color: var(--text);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, var(--success), #059669);
+    color: white;
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, var(--error), #dc2626);
+    color: white;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .rules-box {
+    background: rgba(168, 85, 247, 0.08);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .rule-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .rule-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .rule-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .rule-icon.purple { background: rgba(168, 85, 247, 0.2); color: var(--purple); }
+  .rule-icon.cyan { background: rgba(34, 211, 238, 0.2); color: var(--cyan); }
+  .rule-icon.green { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+  .game-header {
+    padding: 16px 20px;
+    background: rgba(18, 18, 42, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .header-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .user-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .user-level {
+    font-size: 11px;
+    color: var(--cyan);
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 16px;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--cyan);
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .xp-bar-container {
+    background: var(--bg-dark);
+    border-radius: 6px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .xp-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--cyan));
+    border-radius: 6px;
+    transition: width 0.5s ease;
+  }
+
+  .xp-text {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  .game-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  .question-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(168, 85, 247, 0.15);
+    border-radius: 20px;
+    padding: 20px;
+    animation: slideUp 0.4s ease;
+  }
+
+  .question-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .question-difficulty {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .diff-basic { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+  .diff-intermediate { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+  .diff-advanced { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+  .diff-expert { background: rgba(168, 85, 247, 0.15); color: var(--purple); }
+
+  .question-number {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .question-source {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .question-text {
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  .code-block {
+    background: var(--bg-dark);
+    border: 1px solid rgba(168, 85, 247, 0.1);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 16px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--cyan);
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option-btn {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-dark);
+    border: 1px solid rgba(168, 85, 247, 0.15);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .option-btn:active {
+    transform: scale(0.98);
+  }
+
+  .option-letter {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--bg-card-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+  }
+
+  .option-btn.correct {
+    border-color: var(--success);
+    background: rgba(16, 185, 129, 0.1);
+  }
+
+  .option-btn.correct .option-letter {
+    background: var(--success);
+    color: white;
+  }
+
+  .option-btn.incorrect {
+    border-color: var(--error);
+    background: rgba(239, 68, 68, 0.1);
+    animation: shake 0.4s ease;
+  }
+
+  .option-btn.incorrect .option-letter {
+    background: var(--error);
+    color: white;
+  }
+
+  .option-btn.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .feedback-box {
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    animation: slideUp 0.3s ease;
+  }
+
+  .feedback-correct {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--success);
+  }
+
+  .feedback-incorrect {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--error);
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 24px;
+    padding: 28px 24px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    animation: successPop 0.4s ease;
+  }
+
+  .modal-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+
+  .modal-icon.success {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+  }
+
+  .modal-icon.warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+  }
+
+  .modal-icon.purple {
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--purple);
+  }
+
+  .modal-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .modal-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .modal-actions .btn {
+    flex: 1;
+  }
+
+  .loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  .loader {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--bg-card-light);
+    border-top-color: var(--purple);
+    border-radius: 50%;
+    animation: rotateGlow 0.8s linear infinite;
+    margin-bottom: 20px;
+  }
+
+  .loading-text {
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  .settings-panel {
+    background: var(--bg-card);
+    border: 1px solid rgba(168, 85, 247, 0.15);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+
+  .settings-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--purple);
+  }
+
+  .setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.08);
+  }
+
+  .setting-item:last-child {
+    border-bottom: none;
+  }
+
+  .setting-label {
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .setting-value {
+    font-size: 12px;
+    color: var(--cyan);
+    font-family: 'Fira Code', monospace;
+    word-break: break-all;
+    text-align: right;
+  }
+
+  .game-footer {
+    padding: 12px 20px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    display: flex;
+    gap: 10px;
+  }
+
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--bg-card);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 13px;
+    z-index: 200;
+    transition: transform 0.3s ease;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .difficulty-emojis {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 16px 0;
+  }
+
+  .diff-emoji {
+    font-size: 32px;
+    animation: float 2s ease-in-out infinite;
+  }
+
+  .diff-emoji:nth-child(2) { animation-delay: 0.3s; }
+  .diff-emoji:nth-child(3) { animation-delay: 0.6s; }
+
+  .error-msg {
+    color: var(--error);
+    font-size: 12px;
+    margin-top: 4px;
+    display: none;
+  }
+
+  .error-msg.show {
+    display: block;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.3); border-radius: 2px; }
+
+  /* ── PREMIUM: Particles ── */
+  @keyframes particleBurst {
+    0%   { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+  }
+  .particle {
+    position: fixed;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: particleBurst 0.65s ease-out forwards;
+  }
+
+  /* ── PREMIUM: XP float ── */
+  @keyframes xpFloat {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-56px) scale(0.7); }
+  }
+  .xp-float-el {
+    position: fixed;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 17px; font-weight: 900;
+    color: #fbbf24;
+    pointer-events: none;
+    z-index: 9999;
+    text-shadow: 0 0 12px rgba(251,191,36,0.9);
+    animation: xpFloat 1s ease-out forwards;
+  }
+
+  /* ── PREMIUM: Streak fire ── */
+  @keyframes firePulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #f59e0b); }
+    50%       { transform: scale(1.2); filter: drop-shadow(0 0 10px #f59e0b); }
+  }
+  .streak-fire { display: inline-block; animation: firePulse 0.8s ease-in-out infinite; }
+
+  /* ── PREMIUM: Loading steps ── */
+  @keyframes stepIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  #loadingSteps > div { animation: stepIn 0.3s ease; }
+
+  /* ── PREMIUM: Question card glow on correct ── */
+  .question-card.answered-correct {
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.2);
+    transition: border-color 0.4s, box-shadow 0.4s;
+  }
+  .question-card.answered-wrong {
+    border-color: rgba(239, 68, 68, 0.4);
+    transition: border-color 0.4s;
+  }
+
+  /* ── PREMIUM: Retry countdown ── */
+  .retry-msg {
+    font-size: 13px; color: var(--warning);
+    text-align: center; padding: 8px 0;
+    font-weight: 600;
+  }
+
+  /* ── PREMIUM: Input valid/invalid ── */
+  .input-field.valid   { border-color: var(--success); }
+  .input-field.invalid { border-color: var(--error); animation: shake 0.35s ease; }
+
+  /* ── PREMIUM: Loading bar ── */
+  .loading-bar-wrap {
+    width: 200px; height: 4px;
+    background: var(--bg-card-light);
+    border-radius: 4px; margin: 16px auto 0; overflow: hidden;
+  }
+  .loading-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--cyan));
+    border-radius: 4px;
+    animation: loadingPulse 1.5s ease-in-out infinite alternate;
+    width: 40%;
+  }
+  @keyframes loadingPulse {
+    from { width: 20%; margin-left: 0%; }
+    to   { width: 50%; margin-left: 50%; }
+  }
+
+  /* ── PREMIUM: next-btn container ── */
+  .next-btn-container { margin-top: 14px; }
+
+  /* ── Topic picker ── */
+  .topic-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-card-light);
+    border: 2px solid transparent;
+    border-radius: 14px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .topic-btn:active { transform: scale(0.98); }
+  .topic-btn.selected {
+    border-color: var(--purple);
+    background: rgba(168,85,247,0.15);
+    box-shadow: var(--glow-purple);
+  }
+  .topic-btn.all-topics {
+    border-color: var(--cyan);
+    background: rgba(34,211,238,0.08);
+  }
+  .topic-btn.all-topics.selected {
+    background: rgba(34,211,238,0.18);
+    box-shadow: var(--glow-cyan);
+  }
+  .topic-icon { font-size: 22px; flex-shrink: 0; }
+  .topic-info { flex: 1; }
+  .topic-name { font-weight: 600; font-size: 14px; }
+  .topic-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .topic-check { font-size: 18px; opacity: 0; transition: opacity 0.2s; }
+  .topic-btn.selected .topic-check { opacity: 1; }
+  .topic-new-badge {
+    font-size: 9px;
+    font-weight: 700;
+    background: var(--warning);
+    color: #000;
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: 6px;
+  }
+
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="app-container">
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ===== ONBOARDING ===== -->
+  <div class="screen active" id="onboardingScreen">
+    <div class="onboarding-wrapper">
+      <div class="onboarding-logo">SP</div>
+      <h1 class="onboarding-title">SoloPlay</h1>
+      <p class="onboarding-subtitle">Aprende programación con IA</p>
+
+      <div class="step-indicator">
+        <div class="step-dot active" id="stepDot0"></div>
+        <div class="step-dot" id="stepDot1"></div>
+        <div class="step-dot" id="stepDot2"></div>
+        <div class="step-dot" id="stepDot3"></div>
+      </div>
+
+      <!-- STEP 0: API Key -->
+      <div class="onboarding-card" id="step0">
+        <h2 class="onboarding-step-title">🔑 Clave API de Gemini</h2>
+        <p class="onboarding-step-desc">Necesitas una API key de Google Gemini para que la IA pueda generar preguntas personalizadas.</p>
+        <div class="input-group">
+          <label class="input-label">API Key</label>
+          <input type="password" class="input-field" id="apiKeyInput" placeholder="AIzaSy..." autocomplete="off">
+          <p class="input-hint">
+            Obtén tu key gratis en<br>
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">https://aistudio.google.com/apikey</a>
+          </p>
+          <p class="error-msg" id="apiKeyError">Por favor ingresa una API key válida</p>
+        </div>
+        <button class="btn btn-primary" onclick="nextStep(1)">Continuar →</button>
+      </div>
+
+      <!-- STEP 1: Name -->
+      <div class="onboarding-card" id="step1" style="display:none;">
+        <h2 class="onboarding-step-title">¿Cuál es tu nombre?</h2>
+        <p class="onboarding-step-desc">Te llamaremos por este nombre durante las sesiones de práctica.</p>
+        <div class="input-group">
+          <label class="input-label">Tu nombre</label>
+          <input type="text" class="input-field" id="nameInput" placeholder="Ej: Juan Carlos" maxlength="30">
+          <p class="error-msg" id="nameError">Por favor ingresa tu nombre</p>
+        </div>
+        <button class="btn btn-primary" onclick="nextStep(2)">Continuar →</button>
+      </div>
+
+      <!-- STEP 2: Repo -->
+      <div class="onboarding-card" id="step2" style="display:none;">
+        <h2 class="onboarding-step-title">📦 Repositorio GitHub</h2>
+        <p class="onboarding-step-desc">Ingresa el repositorio del profesor con código fuente. La IA usará ese código para generar preguntas.</p>
+        <div class="input-group">
+          <label class="input-label">URL del repositorio</label>
+          <input type="text" class="input-field" id="repoInput" placeholder="usuario/repo" maxlength="80">
+          <p class="input-hint">Formato: usuario/repo (ej: juan-c4rl02-pu81ll/soloplay)</p>
+          <p class="error-msg" id="repoError">Formato inválido. Usa: usuario/repo</p>
+        </div>
+        <button class="btn btn-primary" onclick="nextStep(3)">Continuar →</button>
+      </div>
+
+      <!-- STEP 3: Rules -->
+      <div class="onboarding-card" id="step3" style="display:none;">
+        <h2 class="onboarding-step-title">📜 Reglas del Juego</h2>
+        <div class="rules-box">
+          <div class="rule-item">
+            <span class="rule-icon purple">1</span>
+            <span>La IA solo crea preguntas basándose en el código que scrapea de tu repositorio GitHub.</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon cyan">2</span>
+            <span>El juego te preguntará si quieres parar después de cada ronda.</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon green">3</span>
+            <span>Después de 5 preguntas del mismo nivel, la IA te preguntará si quieres subir de dificultad.</span>
+          </div>
+        </div>
+        <div style="background:rgba(34,211,238,0.07);border:1px solid var(--cyan);border-radius:14px;padding:14px;margin-bottom:14px;font-size:12px;text-align:left;">
+          <p style="color:var(--cyan);font-weight:700;margin-bottom:8px;">🚀 ¿Cómo abrir el juego?</p>
+          <p style="color:var(--text-dim);margin-bottom:10px;">Este juego necesita internet. <strong style="color:var(--text);">No funciona</strong> si lo abrís con doble clic desde tu PC.</p>
+          <p style="color:var(--text);font-weight:600;margin-bottom:6px;">✅ Opción recomendada — GitHub Pages (gratis):</p>
+          <ol style="color:var(--text-dim);padding-left:18px;line-height:1.9;margin-bottom:10px;">
+            <li>Descargá el archivo <code style="color:var(--cyan);">soloplay_github.html</code></li>
+            <li>Subilo a un repositorio en <a href="https://github.com" target="_blank" style="color:var(--cyan);">github.com</a></li>
+            <li>En Settings del repo → <strong>Pages</strong> → Source: <em>main branch</em></li>
+            <li>Copiá la URL que te da GitHub y compartila con tus compañeros</li>
+          </ol>
+          <p style="color:var(--text);font-weight:600;margin-bottom:4px;">🖥️ Si tenés VS Code:</p>
+          <p style="color:var(--text-dim);">Instalá la extensión <strong>Live Server</strong> → clic derecho en el archivo → <em>Open with Live Server</em></p>
+        </div>
+        <button class="btn btn-success" onclick="startGame()">🚀 ¡Comenzar a Jugar!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  <div class="screen" id="loadingScreen">
+    <div class="loading-screen">
+      <div class="loader"></div>
+      <p class="loading-text" id="loadingText">Cargando repositorio...</p>
+      <div class="loading-bar-wrap"><div class="loading-bar-inner"></div></div>
+      <div id="loadingSteps" style="margin-top:20px;text-align:left;max-width:260px;width:100%;"></div>
+    </div>
+  </div>
+
+  <!-- ===== TOPIC PICKER ===== -->
+  <div class="screen" id="topicScreen">
+    <div class="onboarding-container">
+      <div class="onboarding-logo">SP</div>
+      <h1 class="onboarding-title">SoloPlay</h1>
+      <p class="onboarding-subtitle" id="topicSubtitle">Elegí sobre qué practicar hoy</p>
+      <div class="onboarding-card" style="max-height:60vh;overflow-y:auto;">
+        <h2 class="onboarding-step-title">📚 Temas disponibles</h2>
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">
+          Seleccioná un tema o jugá con todo el repositorio mezclado.<br>
+          El aprendizaje es acumulativo: cada tema incluye los anteriores.
+        </p>
+        <div id="topicList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+        <button class="btn btn-primary" id="topicStartBtn" onclick="startWithTopic()" style="opacity:0.5;pointer-events:none;">
+          🚀 ¡Jugar!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== GAME ===== -->
+  <div class="screen" id="gameScreen">
+    <div class="game-header">
+      <div class="header-top">
+        <div class="header-user">
+          <div class="user-avatar" id="userAvatar">J</div>
+          <div class="user-info">
+            <span class="user-name" id="displayName">Jugador</span>
+            <span class="user-level" id="displayLevel">Nivel 1</span>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <div class="stat-value" id="statStreak">0</div>
+            <div class="stat-label">🔥 Racha</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statScore">0</div>
+            <div class="stat-label">⭐ Puntos</div>
+          </div>
+        </div>
+      </div>
+      <div class="xp-bar-container">
+        <div class="xp-bar" id="xpBar" style="width: 0%"></div>
+      </div>
+      <div class="xp-text" id="xpText">0 / 100 XP</div>
+    </div>
+
+    <div class="game-content" id="gameContent"></div>
+
+    <div class="game-footer">
+      <button class="btn btn-secondary" onclick="openSettings()" style="flex:0 0 auto; padding: 12px 16px;">⚙️</button>
+      <button class="btn btn-danger" onclick="askStop()" style="flex:1;">⏸️ Pausar</button>
+    </div>
+  </div>
+
+  <!-- ===== MODALS ===== -->
+  <div class="modal-overlay" id="stopModal">
+    <div class="modal-card">
+      <div class="modal-icon warning">⏸️</div>
+      <h3 class="modal-title">¿Quieres parar?</h3>
+      <p class="modal-desc">Puedes continuar después. Tu progreso se guarda automáticamente.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('stopModal')">Seguir jugando</button>
+        <button class="btn btn-danger" onclick="endSession()">Parar sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="difficultyModal">
+    <div class="modal-card">
+      <div class="modal-icon purple">📈</div>
+      <h3 class="modal-title">¡Subir de nivel!</h3>
+      <p class="modal-desc">Has completado 5 preguntas de este nivel. ¿Quieres aumentar la complejidad?</p>
+      <div class="difficulty-emojis">
+        <span class="diff-emoji">🌱</span>
+        <span class="diff-emoji">🌿</span>
+        <span class="diff-emoji">🌳</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="stayLevel()">Seguir así</button>
+        <button class="btn btn-primary" onclick="increaseDifficulty()">¡Subir! 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card" style="max-width: 400px;">
+      <h3 class="modal-title" style="margin-bottom:16px;">⚙️ Configuración</h3>
+      <div class="settings-panel">
+        <div class="settings-title">Tu Sesión</div>
+        <div class="setting-item">
+          <span class="setting-label">Jugador</span>
+          <span class="setting-value" id="settingName">-</span>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Repositorio</span>
+          <span class="setting-value" id="settingRepo">-</span>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Dificultad</span>
+          <span class="setting-value" id="settingDiff">básico</span>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Preguntas</span>
+          <span class="setting-value" id="settingQuestions">0</span>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Aciertos</span>
+          <span class="setting-value" id="settingCorrect">0</span>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Tema actual</span>
+          <span class="setting-value" id="settingTopic">-</span>
+        </div>
+      </div>
+      <div class="settings-panel">
+        <div class="settings-title">Acciones</div>
+        <button class="btn btn-secondary" onclick="changeTopic()" style="margin-bottom:8px;">📚 Cambiar tema</button>
+        <button class="btn btn-secondary" onclick="resetOnboarding()" style="margin-bottom:8px;">🔄 Reiniciar Onboarding</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑️ Borrar todos los datos</button>
+      </div>
+      <button class="btn btn-primary" onclick="closeModal('settingsModal')" style="margin-top:12px;">Cerrar</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="sessionEndModal">
+    <div class="modal-card">
+      <div class="modal-icon success">🏆</div>
+      <h3 class="modal-title">¡Sesión Terminada!</h3>
+      <div id="sessionStats" style="margin: 16px 0;"></div>
+      <p class="modal-desc" id="sessionMsg">¡Buen trabajo! Vuelve cuando quieras.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeModal('sessionEndModal')">¡De vuelta!</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'soloplay_data';
+const LEVELS = ['básico', 'intermedio', 'avanzado', 'experto'];
+const DIFF_CLASSES = {
+  básico: 'diff-basic',
+  intermedio: 'diff-intermediate',
+  avanzado: 'diff-advanced',
+  experto: 'diff-expert'
+};
+const XP_PER_LEVEL = 100;
+const DIFFICULTY_CHECK_INTERVAL = 5;
+
+let state = {
+  apiKey: '',
+  name: '',
+  repo: '',
+  onboardingDone: false,
+  difficulty: 'básico',
+  totalQuestions: 0,
+  correctAnswers: 0,
+  streak: 0,
+  maxStreak: 0,
+  score: 0,
+  xp: 0,
+  level: 1,
+  questionsInLevel: 0,
+  currentQuestion: null,
+  sessionActive: false,
+  filesCache: [],
+  topicIndex: [],      // [{id, label, paths, fileCount, isNew}]
+  selectedTopic: null, // 'all' | folder path string
+  repoSha: '',         // last known commit SHA to detect updates
+  questionQueue: [],    // pre-generated batch of questions (12 at a time)
+  askedTopics: [],      // last 6 question topics to avoid repeats
+  repoLanguages: []     // detected languages in the repo e.g. ['JavaScript', 'HTML']
+};
+
+function init() {
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      var parsed = JSON.parse(saved);
+      state = Object.assign({}, state, parsed);
+    }
+  } catch(e) {
+    console.warn('[SoloPlay] Error cargando estado:', e);
+  }
+
+  if (state.onboardingDone && state.apiKey && state.name && state.repo) {
+    // Config already saved — go straight to topic picker (re-scrape repo)
+    startGame();
+  } else {
+    // First time or incomplete config — show onboarding from start
+    showScreen('onboardingScreen');
+    // Pre-fill any fields already saved
+    if (state.apiKey) document.getElementById('apiKeyInput').value = state.apiKey;
+    if (state.name) document.getElementById('nameInput').value = state.name;
+    if (state.repo) document.getElementById('repoInput').value = state.repo;
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) {
+    console.warn('[SoloPlay] Error guardando estado:', e);
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showToast(msg, duration) {
+  duration = duration || 2500;
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, duration);
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function restoreOnboardingStep() {
+  // VERSION GITHUB: campos siempre vacíos
+}
+
+function nextStep(toStep) {
+  // toStep = paso destino. Validamos el paso actual (fromStep = toStep - 1) antes de avanzar.
+  var fromStep = toStep - 1;
+
+  if (fromStep === 0) {
+    var key = document.getElementById('apiKeyInput').value.trim();
+    if (!key || key.length < 10) {
+      document.getElementById('apiKeyError').classList.add('show');
+      return;
+    }
+    document.getElementById('apiKeyError').classList.remove('show');
+    state.apiKey = key;
+    saveState();
+  } else if (fromStep === 1) {
+    var name = document.getElementById('nameInput').value.trim();
+    if (!name) {
+      document.getElementById('nameError').classList.add('show');
+      return;
+    }
+    document.getElementById('nameError').classList.remove('show');
+    state.name = name;
+    saveState();
+  } else if (fromStep === 2) {
+    var repo = document.getElementById('repoInput').value.trim();
+    // Accept full GitHub URLs: extract usuario/repo from them
+    var urlMatch = repo.match(/github\.com\/([^/]+\/[^/?#]+)/);
+    if (urlMatch) repo = urlMatch[1];
+    // Remove trailing .git if present
+    repo = repo.replace(/\.git$/, '');
+    // Update the input field to show the cleaned value
+    document.getElementById('repoInput').value = repo;
+    // GitHub allows letters, numbers, hyphens, dots and underscores in both parts
+    var repoPattern = /^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/;
+    if (!repoPattern.test(repo)) {
+      document.getElementById('repoError').classList.add('show');
+      return;
+    }
+    document.getElementById('repoError').classList.remove('show');
+    state.repo = repo;
+    saveState();
+  }
+
+  for (var i = 0; i <= 3; i++) {
+    var dot = document.getElementById('stepDot' + i);
+    dot.classList.remove('active', 'done');
+    if (i < toStep) dot.classList.add('done');
+    if (i === toStep) dot.classList.add('active');
+  }
+
+  for (var j = 0; j <= 3; j++) {
+    document.getElementById('step' + j).style.display = j === toStep ? 'block' : 'none';
+  }
+}
+
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+var CODE_EXTENSIONS = ['.js','.py','.html','.css','.ts','.jsx','.tsx','.php',
+  '.rb','.java','.c','.cpp','.h','.swift','.kt','.go','.rs','.sql','.mjs'];
+
+// ── LOADING STEPS HELPER ────────────────────────────────────────────────────
+function addLoadingStep(text, status) {
+  // status: 'pending' | 'ok' | 'error'
+  var stepsEl = document.getElementById('loadingSteps');
+  if (!stepsEl) return;
+  var icon = status === 'ok' ? '✅' : status === 'error' ? '❌' : '⏳';
+  var id = 'step-' + Date.now();
+  var div = document.createElement('div');
+  div.id = id;
+  div.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-dim);padding:6px 0;border-bottom:1px solid rgba(168,85,247,0.08)';
+  div.innerHTML = '<span style="font-size:16px">' + icon + '</span><span>' + text + '</span>';
+  stepsEl.appendChild(div);
+  return id;
+}
+
+function updateLoadingStep(id, text, status) {
+  if (!id) return;
+  var el = document.getElementById(id);
+  if (!el) return;
+  var icon = status === 'ok' ? '✅' : status === 'error' ? '❌' : '⏳';
+  el.innerHTML = '<span style="font-size:16px">' + icon + '</span><span>' + text + '</span>';
+}
+
+// ── START GAME: always scrape fresh index on launch ─────────────────────────
+async function startGame() {
+  state.onboardingDone = true;
+  saveState();
+
+  showScreen('loadingScreen');
+  document.getElementById('loadingText').textContent = '🔍 Conectando con GitHub...';
+  document.getElementById('loadingSteps').innerHTML = '';
+
+  var step1 = addLoadingStep('Verificando repositorio...', 'pending');
+
+  try {
+    // Step 1: get latest commit SHA to detect if repo changed
+    var latestSha = await getLatestCommitSha(state.repo);
+    var repoChanged = latestSha && latestSha !== state.repoSha;
+    updateLoadingStep(step1, 'Repositorio conectado (' + state.repo + ')', 'ok');
+
+    var step2 = addLoadingStep('Construyendo índice de temas...', 'pending');
+    if (repoChanged || state.topicIndex.length === 0) {
+      document.getElementById('loadingText').textContent = '📂 Indexando carpetas...';
+      var index = await buildTopicIndex(state.repo);
+      // Mark new topics (folders that weren't in the previous index)
+      var prevPaths = new Set((state.topicIndex || []).map(function(t) { return t.id; }));
+      index.forEach(function(t) {
+        t.isNew = repoChanged && prevPaths.size > 0 && !prevPaths.has(t.id);
+      });
+      state.topicIndex = index;
+      state.repoSha = latestSha || '';
+      state.filesCache = []; // clear old cache, load lazily per topic
+      saveState();
+      updateLoadingStep(step2, index.length + ' tema(s) encontrados', 'ok');
+      showToast('✅ Repositorio actualizado: ' + index.length + ' tema(s)');
+    } else {
+      updateLoadingStep(step2, state.topicIndex.length + ' temas (desde caché)', 'ok');
+      showToast('📚 Índice cargado (' + state.topicIndex.length + ' temas)');
+    }
+
+    addLoadingStep('¡Listo! Cargando selector...', 'ok');
+
+  } catch(err) {
+    console.error('Error building index:', err);
+    updateLoadingStep(step1, 'Sin conexión al repo — modo offline', 'error');
+    addLoadingStep('Usando preguntas generales de práctica', 'ok');
+    showToast('⚠️ Sin conexión al repo, modo offline activado', 3500);
+    state.topicIndex = [];
+    state.filesCache = [];
+  }
+
+  setTimeout(function() { showTopicPicker(); }, 600);
+}
+
+// ── GET LATEST COMMIT SHA (lightweight, 1 API call) ─────────────────────────
+async function getLatestCommitSha(repo) {
+  try {
+    var parts = repo.split('/');
+    var resp = await fetch('https://api.github.com/repos/' + parts[0] + '/' + parts[1] + '/commits?per_page=1');
+    if (!resp.ok) return null;
+    var data = await resp.json();
+    return data[0] && data[0].sha ? data[0].sha : null;
+  } catch(e) { return null; }
+}
+
+// ── BUILD TOPIC INDEX (only metadata, no file content yet) ──────────────────
+async function buildTopicIndex(repo) {
+  var parts = repo.split('/');
+  var owner = parts[0];
+  var name = parts[1];
+
+  var resp = await fetch('https://api.github.com/repos/' + owner + '/' + name + '/contents/');
+  if (!resp.ok) throw new Error('No se pudo acceder al repositorio');
+  var root = await resp.json();
+  if (!Array.isArray(root)) throw new Error('Respuesta inesperada de GitHub');
+
+  var index = [];
+
+  // Count code files at root level
+  var rootFiles = root.filter(function(i) {
+    if (i.type !== 'file') return false;
+    var dot = i.name.lastIndexOf('.');
+    return dot > 0 && CODE_EXTENSIONS.includes(i.name.substring(dot).toLowerCase());
+  });
+
+  // Folders = topics
+  var folders = root.filter(function(i) { return i.type === 'dir' && !i.name.startsWith('.'); });
+
+  // For each folder, count code files (1 more API call per folder — lightweight)
+  for (var f = 0; f < folders.length; f++) {
+    var folder = folders[f];
+    try {
+      var fResp = await fetch('https://api.github.com/repos/' + owner + '/' + name + '/contents/' + folder.path);
+      var fData = fResp.ok ? await fResp.json() : [];
+      var fFiles = Array.isArray(fData) ? fData.filter(function(i) {
+        if (i.type !== 'file') return false;
+        var dot = i.name.lastIndexOf('.');
+        return dot > 0 && CODE_EXTENSIONS.includes(i.name.substring(dot).toLowerCase());
+      }) : [];
+      if (fFiles.length > 0) {
+        index.push({ id: folder.path, label: folder.name, fileCount: fFiles.length, isNew: false });
+      }
+    } catch(e) { /* skip inaccessible folders */ }
+  }
+
+  // If no folders or root has its own code files, add a root topic
+  if (rootFiles.length > 0) {
+    index.unshift({ id: '__root__', label: '📁 Archivos raíz', fileCount: rootFiles.length, isNew: false });
+  }
+
+  return index;
+}
+
+// ── SHOW TOPIC PICKER ────────────────────────────────────────────────────────
+function showTopicPicker() {
+  state.selectedTopic = null;
+  showScreen('topicScreen');
+
+  var sub = document.getElementById('topicSubtitle');
+  sub.textContent = '¡Hola ' + state.name + '! ¿Sobre qué practicás hoy?';
+
+  var list = document.getElementById('topicList');
+  list.innerHTML = '';
+
+  // "All topics" option
+  var allBtn = document.createElement('button');
+  allBtn.className = 'topic-btn all-topics';
+  allBtn.dataset.topic = 'all';
+  allBtn.innerHTML =
+    '<span class="topic-icon">🌐</span>' +
+    '<span class="topic-info">' +
+      '<div class="topic-name">Todo el repositorio</div>' +
+      '<div class="topic-meta">Preguntas mezcladas de todos los temas</div>' +
+    '</span>' +
+    '<span class="topic-check">✓</span>';
+  allBtn.onclick = function() { selectTopic('all', allBtn); };
+  list.appendChild(allBtn);
+
+  if (state.topicIndex.length === 0) {
+    // No index available — show general knowledge option
+    var genBtn = document.createElement('button');
+    genBtn.className = 'topic-btn';
+    genBtn.dataset.topic = '__general__';
+    genBtn.innerHTML =
+      '<span class="topic-icon">💡</span>' +
+      '<span class="topic-info">' +
+        '<div class="topic-name">Programación general</div>' +
+        '<div class="topic-meta">Preguntas generales (sin repositorio)</div>' +
+      '</span>' +
+      '<span class="topic-check">✓</span>';
+    genBtn.onclick = function() { selectTopic('__general__', genBtn); };
+    list.appendChild(genBtn);
+  } else {
+    // Accumulative: show topics in order; each includes all previous
+    for (var i = 0; i < state.topicIndex.length; i++) {
+      (function(topic, idx) {
+        var btn = document.createElement('button');
+        btn.className = 'topic-btn';
+        btn.dataset.topic = topic.id;
+
+        var prevCount = idx; // number of previous topics included
+        var accLabel = prevCount > 0
+          ? 'Incluye los ' + prevCount + ' tema(s) anterior(es)'
+          : 'Solo este tema';
+
+        btn.innerHTML =
+          '<span class="topic-icon">📂</span>' +
+          '<span class="topic-info">' +
+            '<div class="topic-name">' + topic.label +
+              (topic.isNew ? '<span class="topic-new-badge">NUEVO</span>' : '') +
+            '</div>' +
+            '<div class="topic-meta">' + topic.fileCount + ' archivo(s) · ' + accLabel + '</div>' +
+          '</span>' +
+          '<span class="topic-check">✓</span>';
+        btn.onclick = function() { selectTopic(topic.id, btn); };
+        list.appendChild(btn);
+      })(state.topicIndex[i], i);
+    }
+  }
+
+  // Restore last selected topic if any
+  if (state.selectedTopic) {
+    var prevBtn = list.querySelector('[data-topic="' + state.selectedTopic + '"]');
+    if (prevBtn) selectTopic(state.selectedTopic, prevBtn);
+  }
+}
+
+function selectTopic(topicId, btn) {
+  state.selectedTopic = topicId;
+  document.querySelectorAll('.topic-btn').forEach(function(b) { b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  var startBtn = document.getElementById('topicStartBtn');
+  startBtn.style.opacity = '1';
+  startBtn.style.pointerEvents = 'auto';
+}
+
+// ── START WITH SELECTED TOPIC ────────────────────────────────────────────────
+async function startWithTopic() {
+  if (!state.selectedTopic) return;
+
+  showScreen('loadingScreen');
+  document.getElementById('loadingText').textContent = '📥 Cargando archivos del tema...';
+
+  try {
+    var files = await loadFilesForTopic(state.repo, state.selectedTopic);
+    state.filesCache = files;
+    console.log('[SoloPlay] Archivos cargados:', files.length, files.map(function(f){ return f.path; }));
+    saveState();
+  } catch(err) {
+    console.error('[SoloPlay] Error loading files:', err);
+    state.filesCache = [];
+  }
+
+  // Block game start if no files loaded — something went wrong with the repo
+  if (state.filesCache.length === 0 && state.selectedTopic !== '__general__') {
+    showScreen('topicScreen');
+    showToast('⚠️ No se pudieron cargar archivos del repo. Verificá que el repo sea público y tenga archivos de código.', 5000);
+    return;
+  }
+
+  // Build a language fingerprint from the loaded files
+  state.repoLanguages = detectRepoLanguages(state.filesCache);
+  console.log('[SoloPlay] Lenguajes detectados:', state.repoLanguages);
+
+  state.sessionActive = true;
+  state.questionQueue = [];   // clear queue — new topic = fresh batch
+  state.askedTopics = [];     // reset variety tracker
+  // repoLanguages is set just above after detectRepoLanguages()
+  saveState();
+  setupGame();
+  showScreen('gameScreen');
+  generateQuestion();
+}
+
+// Detect languages present in the repo files
+function detectRepoLanguages(files) {
+  var langMap = {
+    '.js': 'JavaScript', '.jsx': 'JavaScript', '.ts': 'TypeScript', '.tsx': 'TypeScript',
+    '.py': 'Python', '.html': 'HTML', '.css': 'CSS', '.java': 'Java',
+    '.c': 'C', '.cpp': 'C++', '.h': 'C/C++', '.rb': 'Ruby', '.php': 'PHP',
+    '.go': 'Go', '.rs': 'Rust', '.swift': 'Swift', '.kt': 'Kotlin',
+    '.sql': 'SQL', '.mjs': 'JavaScript'
+  };
+  var found = {};
+  files.forEach(function(f) {
+    var dot = f.name.lastIndexOf('.');
+    if (dot >= 0) {
+      var ext = f.name.substring(dot).toLowerCase();
+      if (langMap[ext]) found[langMap[ext]] = (found[langMap[ext]] || 0) + 1;
+    }
+  });
+  return Object.keys(found).sort(function(a, b) { return found[b] - found[a]; });
+}
+
+// ── LOAD FILES FOR TOPIC (accumulative) ──────────────────────────────────────
+async function loadFilesForTopic(repo, topicId) {
+  var parts = repo.split('/');
+  var owner = parts[0];
+  var name = parts[1];
+  var files = [];
+
+  if (topicId === '__general__') return [];
+
+  // Determine which folders to load (accumulative: this topic + all before it)
+  var foldersToLoad = [];
+
+  if (topicId === 'all') {
+    // All topics + root
+    if (state.topicIndex.some(function(t) { return t.id === '__root__'; })) {
+      foldersToLoad.push('__root__');
+    }
+    state.topicIndex.forEach(function(t) {
+      if (t.id !== '__root__') foldersToLoad.push(t.id);
+    });
+  } else if (topicId === '__root__') {
+    foldersToLoad.push('__root__');
+  } else {
+    // Accumulative: include root + all topics up to and including selected
+    var selectedIdx = state.topicIndex.findIndex(function(t) { return t.id === topicId; });
+    if (state.topicIndex.some(function(t) { return t.id === '__root__'; })) {
+      foldersToLoad.push('__root__');
+    }
+    for (var i = 0; i <= selectedIdx; i++) {
+      if (state.topicIndex[i].id !== '__root__') {
+        foldersToLoad.push(state.topicIndex[i].id);
+      }
+    }
+  }
+
+  // Fetch files from each folder
+  for (var fi = 0; fi < foldersToLoad.length; fi++) {
+    var folder = foldersToLoad[fi];
+    var path = folder === '__root__' ? '' : folder;
+    try {
+      var resp = await fetch('https://api.github.com/repos/' + owner + '/' + name + '/contents/' + path);
+      if (!resp.ok) continue;
+      var items = await resp.json();
+      if (!Array.isArray(items)) continue;
+      for (var j = 0; j < items.length; j++) {
+        var item = items[j];
+        if (item.type !== 'file') continue;
+        var dot = item.name.lastIndexOf('.');
+        if (dot < 0) continue;
+        var ext = item.name.substring(dot).toLowerCase();
+        if (!CODE_EXTENSIONS.includes(ext)) continue;
+        try {
+          var fResp = await fetch('https://api.github.com/repos/' + owner + '/' + name + '/contents/' + item.path, {
+            headers: { 'Accept': 'application/vnd.github.v3.raw' }
+          });
+          if (fResp.ok) {
+            var fileContent = await fResp.text();
+            files.push({ path: item.path, name: item.name, content: fileContent, topic: folder });
+          }
+        } catch(e) { console.warn('Error fetching file:', item.path); }
+      }
+    } catch(e) { console.warn('Error fetching folder:', folder); }
+  }
+
+  return files;
+}
+
+// scrapeRepo replaced by buildTopicIndex + loadFilesForTopic
+
+function setupGame() {
+  var initial = state.name ? state.name.charAt(0).toUpperCase() : '?';
+  document.getElementById('userAvatar').textContent = initial;
+  document.getElementById('displayName').textContent = state.name || 'Jugador';
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('statStreak').textContent = state.streak;
+  document.getElementById('statScore').textContent = state.score;
+  document.getElementById('displayLevel').textContent = 'Nivel ' + state.level + ' • ' + state.difficulty;
+
+  var xpPercent = (state.xp / XP_PER_LEVEL) * 100;
+  document.getElementById('xpBar').style.width = Math.min(xpPercent, 100) + '%';
+  document.getElementById('xpText').textContent = state.xp + ' / ' + XP_PER_LEVEL + ' XP';
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ── BATCH QUESTION SYSTEM ──────────────────────────────────────────────────
+// One Gemini call generates 12 questions. Queue is served locally,
+// a new call only happens when the queue is empty. This keeps free-tier
+// usage at ~2 calls per full session instead of 20.
+
+var BATCH_SIZE = 12;
+
+function buildCodeContext() {
+  // Pick files: 60% from selected topic, 40% from previous topics (accumulative)
+  var topicFiles = state.selectedTopic && state.selectedTopic !== 'all' && state.selectedTopic !== '__general__'
+    ? state.filesCache.filter(function(f) { return f.topic === state.selectedTopic; })
+    : [];
+  var otherFiles = state.filesCache.filter(function(f) { return !topicFiles.includes(f); });
+
+  var shuffledTopic = topicFiles.slice().sort(function() { return Math.random() - 0.5; });
+  var shuffledOther = otherFiles.slice().sort(function() { return Math.random() - 0.5; });
+  var pool = shuffledTopic.slice(0, 3).concat(shuffledOther.slice(0, 2));
+  if (pool.length === 0) {
+    pool = state.filesCache.slice().sort(function() { return Math.random() - 0.5; }).slice(0, 5);
+  }
+
+  var codeContext = '';
+  var sourceFile = pool.length > 0 ? pool[0].name : 'conocimiento general';
+  for (var i = 0; i < pool.length; i++) {
+    var f = pool[i];
+    // 800 chars per file gives Gemini enough real code to ask specific questions
+    var truncated = f.content.length > 800 ? f.content.substring(0, 800) + '\n// ...' : f.content;
+    codeContext += '\n// Archivo: ' + f.path + '\n' + truncated + '\n';
+  }
+  return { codeContext: codeContext, sourceFile: sourceFile };
+}
+
+async function fetchQuestionBatch() {
+  var topics = {
+    básico: 'variables, tipos de datos, condicionales if/else, bucles for y while, funciones básicas en Python o JavaScript',
+    intermedio: 'POO, listas y diccionarios, manejo de errores try/catch, APIs REST, manipulación del DOM',
+    avanzado: 'patrones de diseño, async/await, promesas, decoradores, middlewares, optimización de código',
+    experto: 'arquitectura de software, testing avanzado, concurrencia, seguridad web, CI/CD, diseño de APIs'
+  };
+  var diffMap = {
+    básico: 'básico/principiante (muy fácil)',
+    intermedio: 'intermedio (dificultad media)',
+    avanzado: 'avanzado (difícil)',
+    experto: 'experto (muy difícil)'
+  };
+
+  var ctx = buildCodeContext();
+  var codeContext = state.filesCache.length > 0
+    ? ctx.codeContext
+    : 'IMPORTANTE: No hay repositorio disponible. Genera preguntas SOLO sobre: ' + (topics[state.difficulty] || topics.básico);
+
+  // Include recent asked topics so the model avoids repeating
+  var avoidHint = state.askedTopics.length > 0
+    ? '\nTemas ya preguntados recientemente (evitar repetir): ' + state.askedTopics.slice(-6).join(', ')
+    : '';
+
+  // Build strict language constraint from detected repo languages
+  var langs = (state.repoLanguages && state.repoLanguages.length > 0)
+    ? state.repoLanguages.join(', ')
+    : 'los lenguajes del código mostrado arriba';
+  var langProhibition = (state.repoLanguages && state.repoLanguages.length > 0)
+    ? 'PROHIBIDO usar lenguajes que NO aparecen en el repositorio. Lenguajes detectados: ' + langs + '. NO usar Python si no está en esa lista. NO usar JavaScript si no está en esa lista.'
+    : '';
+
+  var prompt =
+    'Sos un tutor de programación. Tu ÚNICA tarea es generar ' + BATCH_SIZE + ' preguntas de quiz basadas EXCLUSIVAMENTE en el código real que te muestro a continuación.\n\n' +
+    '══════════════ CÓDIGO REAL DEL REPOSITORIO ══════════════\n' +
+    codeContext +
+    '══════════════════════════════════════════════════════════\n\n' +
+    'LENGUAJES EN EL REPOSITORIO: ' + langs + '\n' +
+    (langProhibition ? langProhibition + '\n' : '') +
+    avoidHint + '\n\n' +
+    'DIFICULTAD: ' + diffMap[state.difficulty] + '\n\n' +
+    'REGLAS — LEER ANTES DE GENERAR:\n' +
+    '❌ PROHIBIDO inventar código que no aparece arriba\n' +
+    '❌ PROHIBIDO usar lenguajes distintos a: ' + langs + '\n' +
+    '❌ PROHIBIDO hacer preguntas teóricas genéricas desconectadas del código mostrado\n' +
+    '✅ CADA pregunta debe referenciar un archivo específico del repositorio\n' +
+    '✅ Los snippets deben ser fragmentos REALES del código mostrado arriba\n' +
+    '✅ Variá entre los distintos archivos del contexto\n' +
+    '✅ 4 opciones por pregunta, una sola correcta\n\n' +
+    'Respondé ÚNICAMENTE con este array JSON, sin texto antes ni después:\n' +
+    '[\n' +
+    '  {\n' +
+    '    "question": "pregunta sobre el código real del repo",\n' +
+    '    "options": ["opcion A", "opcion B", "opcion C", "opcion D"],\n' +
+    '    "correctIndex": 0,\n' +
+    '    "explanation": "explicación basada en el código",\n' +
+    '    "codeSnippet": "fragmento REAL del archivo (o vacío)",\n' +
+    '    "sourceFile": "nombre-del-archivo.ext",\n' +
+    '    "topic": "concepto puntual de esta pregunta"\n' +
+    '  }\n' +
+    ']\n(repetir ' + BATCH_SIZE + ' objetos)';
+
+  // Retry up to 3 times with exponential backoff on 429
+  var response;
+  var lastStatus;
+  for (var attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      var waitSec = attempt * 15;
+      var contentEl2 = document.getElementById('gameContent');
+      var countEl = contentEl2 ? contentEl2.querySelector('.countdown-sec') : null;
+      // Start visual countdown
+      await new Promise(function(resolve) {
+        var remaining = waitSec;
+        var msg = contentEl2 ? contentEl2.querySelector('.retry-msg') : null;
+        if (msg) msg.textContent = '⏳ Límite de API (429). Reintentando en ' + remaining + 's...';
+        var interval = setInterval(function() {
+          remaining--;
+          if (msg) msg.textContent = '⏳ Límite de API (429). Reintentando en ' + remaining + 's...';
+          if (remaining <= 0) { clearInterval(interval); resolve(); }
+        }, 1000);
+      });
+    }
+    response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + state.apiKey,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 4000
+          }
+        })
+      }
+    );
+    lastStatus = response.status;
+    if (response.status !== 429) break;
+  }
+
+  if (!response.ok) {
+    if (lastStatus === 429) throw new Error('Límite de Gemini alcanzado (429). Esperá 1 minuto e intentá de nuevo.');
+    if (lastStatus === 400) throw new Error('API key inválida (400). Verificá tu clave en aistudio.google.com/apikey');
+    throw new Error('Error de API: ' + lastStatus);
+  }
+
+  var data = await response.json();
+  var text = (data.candidates &&
+    data.candidates[0] &&
+    data.candidates[0].content &&
+    data.candidates[0].content.parts &&
+    data.candidates[0].content.parts[0])
+    ? data.candidates[0].content.parts[0].text : '';
+
+  // Parse the array — try full array first, then extract objects
+  var questions = null;
+  try {
+    var arrMatch = text.match(/\[[\s\S]*\]/);
+    if (arrMatch) {
+      questions = JSON.parse(arrMatch[0]);
+    }
+  } catch(e) {
+    // Fallback: extract individual objects
+    questions = [];
+    var objMatches = text.match(/\{[^{}]*"question"[^{}]*\}/g);
+    if (objMatches) {
+      objMatches.forEach(function(m) {
+        try { questions.push(JSON.parse(m)); } catch(e2) {}
+      });
+    }
+  }
+
+  // Validate and filter
+  if (!questions || !Array.isArray(questions)) throw new Error('La IA no devolvió preguntas válidas');
+  questions = questions.filter(function(q) {
+    return q && q.question && Array.isArray(q.options) && q.options.length >= 2 && typeof q.correctIndex === 'number';
+  });
+  if (questions.length === 0) throw new Error('No se pudieron parsear las preguntas generadas');
+
+  return { questions: questions, sourceFile: ctx.sourceFile };
+}
+
+var FALLBACK_QUESTIONS = [
+  { question: '¿Cuál es la forma correcta de declarar una variable en Python?', options: ['var x = 5', 'let x = 5', 'x = 5', 'int x = 5'], correctIndex: 2, explanation: 'En Python las variables se asignan directamente sin declarar el tipo.', codeSnippet: 'x = 5', language: 'python', sourceFile: 'fallback', topic: 'variables' },
+  { question: '¿Qué hace console.log() en JavaScript?', options: ['Muestra un alert', 'Imprime en la consola', 'Crea un archivo log', 'Ejecuta código'], correctIndex: 1, explanation: 'console.log() imprime mensajes en la consola del navegador.', codeSnippet: 'console.log("Hola");', language: 'javascript', sourceFile: 'fallback', topic: 'consola' },
+  { question: '¿Qué método añade un elemento al final de una lista en Python?', options: ['push()', 'add()', 'append()', 'insert()'], correctIndex: 2, explanation: 'append() añade un elemento al final de la lista.', codeSnippet: 'lista = []\nlista.append(42)', language: 'python', sourceFile: 'fallback', topic: 'listas' },
+  { question: '¿Cuál es el resultado de 2 ** 3 en Python?', options: ['6', '8', '5', '9'], correctIndex: 1, explanation: 'El operador ** es potenciación. 2 ** 3 = 8.', codeSnippet: 'print(2 ** 3)  # 8', language: 'python', sourceFile: 'fallback', topic: 'operadores' },
+  { question: '¿Qué palabra clave define una función en Python?', options: ['function', 'fun', 'def', 'fn'], correctIndex: 2, explanation: 'En Python se usa "def" para definir funciones.', codeSnippet: 'def saludar():\n    print("Hola")', language: 'python', sourceFile: 'fallback', topic: 'funciones' }
+];
+
+async function generateQuestion() {
+  var contentEl = document.getElementById('gameContent');
+
+  // ── Serve from queue if available ──────────────────────────────────────────
+  if (state.questionQueue && state.questionQueue.length > 0) {
+    var next = state.questionQueue.shift();
+    // Track topic to avoid repeats in next batch
+    if (next.topic) {
+      state.askedTopics.push(next.topic);
+      if (state.askedTopics.length > 12) state.askedTopics.shift();
+    }
+    state.currentQuestion = next;
+    renderQuestion(next, next.sourceFile || 'repositorio');
+
+    // Pre-fetch next batch in background when queue gets low (5 left)
+    if (state.questionQueue.length === 5) {
+      fetchQuestionBatch().then(function(result) {
+        state.questionQueue = state.questionQueue.concat(result.questions);
+      }).catch(function() { /* silent fail, fallback will trigger later */ });
+    }
+    return;
+  }
+
+  // ── Queue empty: fetch new batch ────────────────────────────────────────────
+  contentEl.innerHTML =
+    '<div class="question-card">' +
+    '<div style="text-align:center;padding:40px 20px;">' +
+    '<div class="loader" style="margin:0 auto 16px;"></div>' +
+    '<p style="color:var(--text-dim);font-size:14px;">🤖 Generando ' + BATCH_SIZE + ' preguntas nuevas...</p>' +
+    '<p style="color:var(--text-dim);font-size:11px;margin-top:8px;">Solo se hace 1 llamada cada ~12 preguntas</p>' +
+    '</div></div>';
+
+  try {
+    var result = await fetchQuestionBatch();
+    state.questionQueue = result.questions.slice(1); // rest go to queue
+    var first = result.questions[0];
+    if (first.topic) {
+      state.askedTopics.push(first.topic);
+      if (state.askedTopics.length > 12) state.askedTopics.shift();
+    }
+    state.currentQuestion = first;
+    renderQuestion(first, first.sourceFile || result.sourceFile);
+
+  } catch(err) {
+    console.error('Error generating batch:', err);
+    var errMsg = err.message || 'Error desconocido';
+    var hint = '';
+    if (errMsg.includes('429') || errMsg.includes('Límite')) {
+      hint = '<p style="font-size:11px;color:var(--text-dim);margin:8px 0;">💡 Plan gratuito: 15 req/min. Esperá 1 minuto — el juego solo hace 1 llamada cada 12 preguntas.</p>';
+    } else if (errMsg.includes('400') || errMsg.includes('inválida')) {
+      hint = '<p style="font-size:11px;color:var(--text-dim);margin:8px 0;">💡 Obtén tu key gratis en <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--cyan)">aistudio.google.com/apikey</a></p>';
+    } else if (errMsg.includes('fetch') || errMsg.includes('Failed') || errMsg.includes('network')) {
+      hint = '<p style="font-size:11px;color:var(--text-dim);margin:8px 0;">💡 Usá GitHub Pages o Live Server — no funciona abierto directo desde archivo.</p>';
+    }
+
+    // Use fallback questions so the game doesn't die
+    var shuffledFallback = FALLBACK_QUESTIONS.slice().sort(function() { return Math.random() - 0.5; });
+    state.questionQueue = shuffledFallback.slice(1);
+    var fallbackFirst = shuffledFallback[0];
+    state.currentQuestion = fallbackFirst;
+
+    contentEl.innerHTML =
+      '<div class="question-card">' +
+      '<div style="background:rgba(245,158,11,0.1);border:1px solid var(--warning);border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;">' +
+      '⚠️ <strong style="color:var(--warning);">Sin conexión a la IA</strong> — mostrando preguntas de práctica.' +
+      hint +
+      '<button class="btn btn-secondary" onclick="generateQuestion()" style="font-size:12px;padding:6px 12px;margin-top:8px;width:100%;">🔄 Reintentar con IA</button>' +
+      '</div></div>';
+
+    // Render fallback question after the warning
+    renderQuestion(fallbackFirst, 'práctica offline');
+  }
+}
+
+function renderQuestion(question, sourceFile) {
+  var content = document.getElementById('gameContent');
+  var letters = ['A', 'B', 'C', 'D'];
+  var diffClass = DIFF_CLASSES[state.difficulty] || 'diff-basic';
+
+  var html = '<div class="question-card" style="animation:slideUp 0.4s ease;">';
+  html += '<div class="question-meta">';
+  html += '<span class="question-difficulty ' + diffClass + '">' + state.difficulty.toUpperCase() + '</span>';
+  html += '<span class="question-number">Pregunta #' + (state.totalQuestions + 1) + '</span>';
+  html += '</div>';
+  html += '<div class="question-source">📄 ' + escapeHtml(sourceFile || 'conocimiento general') + '</div>';
+  html += '<p class="question-text">' + escapeHtml(question.question) + '</p>';
+
+  if (question.codeSnippet) {
+    html += '<div class="code-block">' + escapeHtml(question.codeSnippet) + '</div>';
+  }
+
+  html += '<div class="options-list">';
+  for (var i = 0; i < question.options.length; i++) {
+    html += '<button class="option-btn" onclick="selectAnswer(' + i + ')" id="opt' + i + '">';
+    html += '<span class="option-letter">' + letters[i] + '</span>';
+    html += '<span>' + escapeHtml(question.options[i]) + '</span>';
+    html += '</button>';
+  }
+  html += '</div>';
+  html += '<div id="feedbackArea"></div>';
+  html += '<div id="nextBtnContainer"></div>';
+  html += '</div>';
+
+  content.innerHTML = html;
+}
+
+// ── PREMIUM EFFECTS ──────────────────────────────────────────────────────────
+function spawnParticles(x, y, color) {
+  var colors = color ? [color] : ['#a855f7','#22d3ee','#10b981','#fbbf24','#f472b6'];
+  for (var i = 0; i < 18; i++) {
+    var p = document.createElement('div');
+    p.className = 'particle';
+    var angle = (i / 18) * 360;
+    var dist = 40 + Math.random() * 60;
+    var dx = Math.cos(angle * Math.PI / 180) * dist;
+    var dy = Math.sin(angle * Math.PI / 180) * dist;
+    p.style.cssText =
+      'left:' + x + 'px;top:' + y + 'px;' +
+      'background:' + colors[i % colors.length] + ';' +
+      '--dx:' + dx + 'px;--dy:' + dy + 'px;' +
+      'animation-duration:' + (0.5 + Math.random() * 0.3) + 's';
+    document.body.appendChild(p);
+    setTimeout(function(el) { el.remove(); }, 900, p);
+  }
+}
+
+function showXpFloat(x, y, amount) {
+  var el = document.createElement('div');
+  el.className = 'xp-float-el';
+  el.textContent = '+' + amount + ' XP';
+  el.style.left = (x - 30) + 'px';
+  el.style.top  = (y - 10) + 'px';
+  document.body.appendChild(el);
+  setTimeout(function() { el.remove(); }, 1100);
+}
+
+function selectAnswer(idx) {
+  var q = state.currentQuestion;
+  if (!q) return;
+
+  var correct = q.correctIndex;
+  var isCorrect = idx === correct;
+
+  var buttons = document.querySelectorAll('.option-btn');
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].classList.add('disabled');
+    if (i === correct) buttons[i].classList.add('correct');
+    if (i === idx && !isCorrect) buttons[i].classList.add('incorrect');
+  }
+
+  // Add glow to card
+  var card = document.querySelector('.question-card');
+  if (card) card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+  state.totalQuestions++;
+
+  if (isCorrect) {
+    state.streak++;
+    if (state.streak > state.maxStreak) state.maxStreak = state.streak;
+    var xpGain = state.difficulty === 'básico' ? 15 : state.difficulty === 'intermedio' ? 25 : state.difficulty === 'avanzado' ? 40 : 60;
+    var streakBonus = Math.min(state.streak, 5) * 2;
+    var totalXp = xpGain + streakBonus;
+    state.xp += totalXp;
+    state.score += totalXp * 10;
+    state.correctAnswers++;
+
+    // Particles + XP float from clicked button
+    var btn = document.getElementById('opt' + idx);
+    if (btn) {
+      var rect = btn.getBoundingClientRect();
+      var cx = rect.left + rect.width / 2;
+      var cy = rect.top + rect.height / 2;
+      spawnParticles(cx, cy);
+      showXpFloat(cx, cy, totalXp);
+    }
+
+    if (state.xp >= XP_PER_LEVEL) {
+      state.xp -= XP_PER_LEVEL;
+      state.level++;
+      showToast('🎉 ¡Subiste al Nivel ' + state.level + '!', 3000);
+    }
+
+    var streakTxt = state.streak >= 3
+      ? ' <span class="streak-fire">🔥</span> ¡Racha x' + state.streak + '!'
+      : '';
+    document.getElementById('feedbackArea').innerHTML =
+      '<div class="feedback-box feedback-correct">✅ ¡Correcto! +' + totalXp + ' XP' + streakTxt + '<br><small style="opacity:0.8;">' + escapeHtml(q.explanation || '') + '</small></div>';
+  } else {
+    state.streak = 0;
+    document.getElementById('feedbackArea').innerHTML =
+      '<div class="feedback-box feedback-incorrect">❌ Incorrecto. La respuesta era: <strong>' + escapeHtml(q.options[correct]) + '</strong><br><small style="opacity:0.8;">' + escapeHtml(q.explanation || '') + '</small></div>';
+  }
+
+  state.questionsInLevel++;
+  saveState();
+  updateStats();
+
+  document.getElementById('nextBtnContainer').innerHTML =
+    '<div class="next-btn-container"><button class="btn btn-primary" onclick="afterQuestionFlow()">Siguiente pregunta →</button></div>';
+
+  document.getElementById('feedbackArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function afterQuestionFlow() {
+  if (state.questionsInLevel >= DIFFICULTY_CHECK_INTERVAL) {
+    openModal('difficultyModal');
+  } else {
+    generateQuestion();
+  }
+}
+
+function increaseDifficulty() {
+  closeModal('difficultyModal');
+  var currentIdx = LEVELS.indexOf(state.difficulty);
+  if (currentIdx < LEVELS.length - 1) {
+    state.difficulty = LEVELS[currentIdx + 1];
+    state.questionsInLevel = 0;
+    state.questionQueue = []; // clear queue so next batch uses new difficulty
+    state.askedTopics = [];
+    // Keep repoLanguages — same repo, just harder questions
+    showToast('📈 ¡Dificultad: ' + state.difficulty + '!');
+    saveState();
+    updateStats();
+  }
+  generateQuestion();
+}
+
+function stayLevel() {
+  closeModal('difficultyModal');
+  state.questionsInLevel = 0;
+  saveState();
+  generateQuestion();
+}
+
+function askStop() {
+  openModal('stopModal');
+}
+
+function endSession() {
+  closeModal('stopModal');
+  state.sessionActive = false;
+  saveState();
+
+  var accuracy = state.totalQuestions > 0 ? Math.round((state.correctAnswers / state.totalQuestions) * 100) : 0;
+  document.getElementById('sessionStats').innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+    '<div style="background:var(--bg-dark);padding:12px;border-radius:12px;text-align:center;"><div style="font-family:Orbitron;font-size:24px;color:var(--cyan);">' + state.totalQuestions + '</div><div style="font-size:11px;color:var(--text-dim);">Preguntas</div></div>' +
+    '<div style="background:var(--bg-dark);padding:12px;border-radius:12px;text-align:center;"><div style="font-family:Orbitron;font-size:24px;color:var(--success);">' + accuracy + '%</div><div style="font-size:11px;color:var(--text-dim);">Precisión</div></div>' +
+    '<div style="background:var(--bg-dark);padding:12px;border-radius:12px;text-align:center;"><div style="font-family:Orbitron;font-size:24px;color:var(--purple);">' + state.score + '</div><div style="font-size:11px;color:var(--text-dim);">Puntos</div></div>' +
+    '<div style="background:var(--bg-dark);padding:12px;border-radius:12px;text-align:center;"><div style="font-family:Orbitron;font-size:24px;color:var(--warning);">' + state.maxStreak + '</div><div style="font-size:11px;color:var(--text-dim);">Racha máx.</div></div>' +
+    '</div>';
+
+  document.getElementById('sessionMsg').textContent = '¡Bien hecho, ' + state.name + '! Has respondido ' + state.correctAnswers + ' de ' + state.totalQuestions + ' correctamente.';
+  openModal('sessionEndModal');
+}
+
+function resetOnboarding() {
+  state = {
+    apiKey: '', name: '', repo: '', onboardingDone: false,
+    difficulty: 'básico', level: 1, xp: 0, score: 0,
+    streak: 0, maxStreak: 0, totalQuestions: 0,
+    correctAnswers: 0, questionsInLevel: 0,
+    sessionActive: false, currentQuestion: null, filesCache: [],
+    topicIndex: [], selectedTopic: null, repoSha: '',
+    questionQueue: [], askedTopics: [], repoLanguages: []
+  };
+  saveState();
+  closeModal('settingsModal');
+  showScreen('onboardingScreen');
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('nameInput').value = '';
+  document.getElementById('repoInput').value = '';
+  for (var i = 0; i <= 3; i++) {
+    document.getElementById('step' + i).style.display = i === 0 ? 'block' : 'none';
+    var dot = document.getElementById('stepDot' + i);
+    dot.classList.remove('active', 'done');
+    if (i === 0) dot.classList.add('active');
+  }
+}
+
+function clearAllData() {
+  if (confirm('¿Seguro que quieres borrar TODOS los datos? Esto incluye tu API key y progreso.')) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+}
+
+function changeTopic() {
+  closeModal('settingsModal');
+  // Re-show topic picker with existing index (no re-scrape needed)
+  showTopicPicker();
+}
+
+function openSettings() {
+  document.getElementById('settingName').textContent = state.name || '-';
+  document.getElementById('settingRepo').textContent = state.repo || '-';
+  document.getElementById('settingDiff').textContent = state.difficulty || 'básico';
+  document.getElementById('settingQuestions').textContent = state.totalQuestions;
+  document.getElementById('settingCorrect').textContent = state.correctAnswers;
+  var topicName = state.selectedTopic === 'all' ? 'Todo el repo' :
+                  state.selectedTopic === '__general__' ? 'General' :
+                  state.selectedTopic || '-';
+  document.getElementById('settingTopic').textContent = topicName;
+  openModal('settingsModal');
+}
+
+init();
+</script>
+</body>
+</html>
